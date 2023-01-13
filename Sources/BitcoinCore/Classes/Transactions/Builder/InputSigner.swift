@@ -17,7 +17,6 @@ class InputSigner {
         self.hdWallet = hdWallet
         self.network = network
     }
-
 }
 
 extension InputSigner: IInputSigner {
@@ -44,4 +43,14 @@ extension InputSigner: IInputSigner {
         }
     }
 
+    func sigScriptSignatureHash(transaction: Transaction, inputsToSign: [InputToSign], outputs: [Output], index: Int) throws -> Data {
+        let input = inputsToSign[index]
+        let previousOutput = input.previousOutput
+
+        let witness = previousOutput.scriptType == .p2wpkh || previousOutput.scriptType == .p2wpkhSh
+
+        var serializedTransaction = try TransactionSerializer.serializedForSignature(transaction: transaction, inputsToSign: inputsToSign, outputs: outputs, inputIndex: index, forked: witness || network.sigHash.forked)
+        serializedTransaction += UInt32(network.sigHash.value)
+        return Crypto.doubleSha256(serializedTransaction)
+    }
 }

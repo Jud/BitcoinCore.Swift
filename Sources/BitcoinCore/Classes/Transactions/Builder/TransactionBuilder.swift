@@ -30,6 +30,18 @@ extension TransactionBuilder: ITransactionBuilder {
         return mutableTransaction.build()
     }
 
+    func buildUnsignedMutableTransaction(toAddress: String, value: Int, feeRate: Int, senderPay: Bool, sortType: TransactionDataSortType, pluginData: [UInt8: IPluginData]) throws -> MutableTransaction {
+        let mutableTransaction = MutableTransaction()
+
+        try recipientSetter.setRecipient(to: mutableTransaction, toAddress: toAddress, value: value, pluginData: pluginData, skipChecks: false)
+        try inputSetter.setInputs(to: mutableTransaction, feeRate: feeRate, senderPay: senderPay, sortType: sortType)
+        lockTimeSetter.setLockTime(to: mutableTransaction)
+
+        outputSetter.setOutputs(to: mutableTransaction, sortType: sortType)
+
+        return mutableTransaction
+    }
+
     func buildTransaction(from unspentOutput: UnspentOutput, toAddress: String, feeRate: Int, sortType: TransactionDataSortType) throws -> FullTransaction {
         let mutableTransaction = MutableTransaction(outgoing: false)
 

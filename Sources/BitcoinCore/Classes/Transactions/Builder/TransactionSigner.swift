@@ -6,9 +6,9 @@ class TransactionSigner {
         case noRedeemScript
     }
 
-    private let inputSigner: IInputSigner
+    private let inputSigner: InputSigner
 
-    init(inputSigner: IInputSigner) {
+    init(inputSigner: InputSigner) {
         self.inputSigner = inputSigner
     }
 
@@ -21,6 +21,21 @@ class TransactionSigner {
 }
 
 extension TransactionSigner: ITransactionSigner {
+
+    func dataToSign(mutableTransaction: MutableTransaction) throws -> [Data] {
+        var ret = [Data]()
+        for (index, _) in mutableTransaction.inputsToSign.enumerated() {
+            let sigHashData = try inputSigner.sigScriptSignatureHash(
+                    transaction: mutableTransaction.transaction,
+                    inputsToSign: mutableTransaction.inputsToSign,
+                    outputs: mutableTransaction.outputs,
+                    index: index
+            )
+            ret.append(sigHashData)
+        }
+
+        return ret
+    }
 
     func sign(mutableTransaction: MutableTransaction) throws {
         for (index, inputToSign) in mutableTransaction.inputsToSign.enumerated() {
