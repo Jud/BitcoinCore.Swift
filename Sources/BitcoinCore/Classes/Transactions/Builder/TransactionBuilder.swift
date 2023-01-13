@@ -1,3 +1,4 @@
+import Foundation
 class TransactionBuilder {
     private let recipientSetter: IRecipientSetter
     private let inputSetter: IInputSetter
@@ -30,7 +31,7 @@ extension TransactionBuilder: ITransactionBuilder {
         return mutableTransaction.build()
     }
 
-    func buildUnsignedMutableTransaction(toAddress: String, value: Int, feeRate: Int, senderPay: Bool, sortType: TransactionDataSortType, pluginData: [UInt8: IPluginData]) throws -> MutableTransaction {
+    func buildUnsignedMutableTransaction(toAddress: String, value: Int, feeRate: Int, senderPay: Bool, sortType: TransactionDataSortType, pluginData: [UInt8: IPluginData]) throws -> (MutableTransaction, [Data]) {
         let mutableTransaction = MutableTransaction()
 
         try recipientSetter.setRecipient(to: mutableTransaction, toAddress: toAddress, value: value, pluginData: pluginData, skipChecks: false)
@@ -39,7 +40,7 @@ extension TransactionBuilder: ITransactionBuilder {
 
         outputSetter.setOutputs(to: mutableTransaction, sortType: sortType)
 
-        return mutableTransaction
+        return (mutableTransaction, try signer.dataToSign(mutableTransaction: mutableTransaction))
     }
 
     func buildTransaction(from unspentOutput: UnspentOutput, toAddress: String, feeRate: Int, sortType: TransactionDataSortType) throws -> FullTransaction {

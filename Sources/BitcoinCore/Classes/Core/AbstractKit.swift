@@ -42,7 +42,7 @@ open class AbstractKit {
         bitcoinCore.transaction(hash: hash)
     }
 
-    open func build(to address: String, value: Int, feeRate: Int, sortType: TransactionDataSortType, pluginData: [UInt8: IPluginData] = [:]) throws -> MutableTransaction {
+    open func build(to address: String, value: Int, feeRate: Int, sortType: TransactionDataSortType, pluginData: [UInt8: IPluginData] = [:]) throws -> (MutableTransaction, [Data]) {
         try bitcoinCore.build(to: address, value: value, feeRate: feeRate, sortType: sortType, pluginData: pluginData)
     }
     

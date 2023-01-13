@@ -154,7 +154,7 @@ extension BitcoinCore {
         dataProvider.transaction(hash: hash)
     }
     
-    public func build(to address: String, value: Int, feeRate: Int, sortType: TransactionDataSortType, pluginData: [UInt8: IPluginData] = [:]) throws -> MutableTransaction {
+    public func build(to address: String, value: Int, feeRate: Int, sortType: TransactionDataSortType, pluginData: [UInt8: IPluginData] = [:]) throws -> (MutableTransaction, [Data]) {
         guard let transactionCreator = transactionCreator else {
             throw CoreError.readOnlyCore
         }

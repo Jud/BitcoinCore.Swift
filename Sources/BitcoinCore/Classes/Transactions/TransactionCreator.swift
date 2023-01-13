@@ -33,7 +33,7 @@ class TransactionCreator {
 
 extension TransactionCreator: ITransactionCreator {
 
-    func build(to address: String, value: Int, feeRate: Int, senderPay: Bool, sortType: TransactionDataSortType, pluginData: [UInt8: IPluginData] = [:]) throws -> MutableTransaction {
+    func build(to address: String, value: Int, feeRate: Int, senderPay: Bool, sortType: TransactionDataSortType, pluginData: [UInt8: IPluginData] = [:]) throws -> (MutableTransaction, [Data]) {
         return try transactionBuilder.buildUnsignedMutableTransaction(
                 toAddress: address,
                 value: value,
