@@ -46,6 +46,10 @@ open class AbstractKit {
         try bitcoinCore.build(to: address, value: value, feeRate: feeRate, sortType: sortType, pluginData: pluginData)
     }
     
+    public func finalize(tx: MutableTransaction, data: [Data]) throws -> FullTransaction {
+        try bitcoinCore.finalize(tx: tx, data: data)
+    }
+    
     open func send(to address: String, value: Int, feeRate: Int, sortType: TransactionDataSortType, pluginData: [UInt8: IPluginData] = [:]) throws -> FullTransaction {
         try bitcoinCore.send(to: address, value: value, feeRate: feeRate, sortType: sortType, pluginData: pluginData)
     }

@@ -53,4 +53,17 @@ extension InputSigner: IInputSigner {
         serializedTransaction += UInt32(network.sigHash.value)
         return Crypto.doubleSha256(serializedTransaction)
     }
+    
+    func sigScriptDataFromSignatureData(transaction: Transaction, inputsToSign: [InputToSign], outputs: [Output], index: Int, data: [Data]) throws -> [Data] {
+        let input = inputsToSign[index]
+        let previousOutput = input.previousOutput
+        let pubKey = input.previousOutputPublicKey
+        let publicKey = pubKey.raw
+
+        let signature = data[index] + Data([network.sigHash.value])
+        switch previousOutput.scriptType {
+        case .p2pk: return [signature]
+        default: return [signature, publicKey]
+        }
+    }
 }

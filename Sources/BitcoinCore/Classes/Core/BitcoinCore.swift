@@ -161,6 +161,14 @@ extension BitcoinCore {
 
         return try transactionCreator.build(to: address, value: value, feeRate: feeRate, senderPay: true, sortType: sortType, pluginData: pluginData)
     }
+    
+    public func finalize(tx: MutableTransaction, data: [Data]) throws -> FullTransaction {
+        guard let transactionCreator = transactionCreator else {
+            throw CoreError.readOnlyCore
+        }
+
+        return try transactionCreator.finalize(tx: tx, data: data)
+    }
 
     public func send(to address: String, value: Int, feeRate: Int, sortType: TransactionDataSortType, pluginData: [UInt8: IPluginData] = [:]) throws -> FullTransaction {
         guard let transactionCreator = transactionCreator else {

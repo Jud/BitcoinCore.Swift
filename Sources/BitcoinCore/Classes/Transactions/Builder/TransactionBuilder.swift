@@ -42,6 +42,11 @@ extension TransactionBuilder: ITransactionBuilder {
 
         return (mutableTransaction, try signer.dataToSign(mutableTransaction: mutableTransaction))
     }
+    
+    func finalizeTransaction(tx: MutableTransaction, data: [Data]) throws -> FullTransaction {
+        try signer.signWithSignatureData(mutableTransaction: tx, data: data)
+        return tx.build()
+    }
 
     func buildTransaction(from unspentOutput: UnspentOutput, toAddress: String, feeRate: Int, sortType: TransactionDataSortType) throws -> FullTransaction {
         let mutableTransaction = MutableTransaction(outgoing: false)

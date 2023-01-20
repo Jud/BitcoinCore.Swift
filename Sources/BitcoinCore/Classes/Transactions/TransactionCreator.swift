@@ -44,6 +44,13 @@ extension TransactionCreator: ITransactionCreator {
         )
     }
     
+    func finalize(tx: MutableTransaction, data: [Data]) throws -> FullTransaction {
+        let transaction = try transactionBuilder.finalizeTransaction(tx: tx, data: data)
+        
+        try processAndSend(transaction: transaction)
+        return transaction
+    }
+    
     func create(to address: String, value: Int, feeRate: Int, senderPay: Bool, sortType: TransactionDataSortType, pluginData: [UInt8: IPluginData] = [:]) throws -> FullTransaction {
         let transaction = try transactionBuilder.buildTransaction(
                 toAddress: address,
