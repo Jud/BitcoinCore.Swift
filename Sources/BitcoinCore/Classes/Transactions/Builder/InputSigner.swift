@@ -10,11 +10,16 @@ class InputSigner {
         case noPrivateKey
     }
 
-    let hdWallet: IPrivateHDWallet
+    let hdWallet: IPrivateHDWallet?
     let network: INetwork
 
     init(hdWallet: IPrivateHDWallet, network: INetwork) {
         self.hdWallet = hdWallet
+        self.network = network
+    }
+    
+    init(network: INetwork) {
+        self.hdWallet = nil
         self.network = network
     }
 }
@@ -26,8 +31,10 @@ extension InputSigner: IInputSigner {
         let previousOutput = input.previousOutput
         let pubKey = input.previousOutputPublicKey
         let publicKey = pubKey.raw
-
-        guard let privateKeyData = try? hdWallet.privateKeyData(account: pubKey.account, index: pubKey.index, external: pubKey.external) else {
+        guard let wallet = self.hdWallet else {
+            throw SignError.noPrivateKey
+        }
+        guard let privateKeyData = try? wallet.privateKeyData(account: pubKey.account, index: pubKey.index, external: pubKey.external) else {
             throw SignError.noPrivateKey
         }
         let witness = previousOutput.scriptType == .p2wpkh || previousOutput.scriptType == .p2wpkhSh

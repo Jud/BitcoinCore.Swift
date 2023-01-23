@@ -134,6 +134,7 @@ public class BitcoinCoreBuilder {
         let reachabilityManager = ReachabilityManager()
 
         var hdWallet: IPrivateHDWallet?
+        var publicWallet: HDWatchAccountWallet?
         let publicKeyFetcher: IPublicKeyFetcher
         var multiAccountPublicKeyFetcher: IMultiAccountPublicKeyFetcher?
         let publicKeyManager: IPublicKeyManager & IBloomFilterProvider
@@ -162,6 +163,7 @@ public class BitcoinCoreBuilder {
             switch extendedKey.derivedType {
             case .account:
                 let wallet = HDWatchAccountWallet(publicKey: publicKey)
+                publicWallet = wallet
                 publicKeyFetcher = WatchPublicKeyFetcher(hdWatchAccountWallet: wallet)
                 publicKeyManager = AccountPublicKeyManager.instance(storage: storage, hdWallet: wallet, gapLimit: 20, restoreKeyConverter: restoreKeyConverterChain)
             default: throw BuildError.notSupported
@@ -228,29 +230,36 @@ public class BitcoinCoreBuilder {
         var transactionFeeCalculator: TransactionFeeCalculator?
         var transactionSender: TransactionSender?
         var transactionCreator: TransactionCreator?
+        var inputSigner: InputSigner
 
         if let hdWallet = hdWallet {
-            let inputSigner = InputSigner(hdWallet: hdWallet, network: network)
-            let transactionSizeCalculatorInstance = TransactionSizeCalculator()
-            let dustCalculatorInstance = DustCalculator(dustRelayTxFee: network.dustRelayTxFee, sizeCalculator: transactionSizeCalculatorInstance)
-            let recipientSetter = RecipientSetter(addressConverter: addressConverter, pluginManager: pluginManager)
-            let outputSetter = OutputSetter(outputSorterFactory: transactionDataSorterFactory, factory: factory)
-            let inputSetter = InputSetter(unspentOutputSelector: unspentOutputSelector, transactionSizeCalculator: transactionSizeCalculatorInstance, addressConverter: addressConverter, publicKeyManager: publicKeyManager, factory: factory, pluginManager: pluginManager, dustCalculator: dustCalculatorInstance, changeScriptType: purpose.scriptType, inputSorterFactory: transactionDataSorterFactory)
-            let lockTimeSetter = LockTimeSetter(storage: storage)
-            let transactionSigner = TransactionSigner(inputSigner: inputSigner)
-            let transactionBuilder = TransactionBuilder(recipientSetter: recipientSetter, inputSetter: inputSetter, lockTimeSetter: lockTimeSetter, outputSetter: outputSetter, signer: transactionSigner)
-            transactionFeeCalculator = TransactionFeeCalculator(recipientSetter: recipientSetter, inputSetter: inputSetter, addressConverter: addressConverter, publicKeyManager: publicKeyManager, changeScriptType: purpose.scriptType)
-            let transactionSendTimer = TransactionSendTimer(interval: 60)
-            let transactionSenderInstance = TransactionSender(transactionSyncer: transactionSyncer, initialBlockDownload: initialBlockDownload, peerManager: peerManager, storage: storage, timer: transactionSendTimer, logger: logger)
-
-            dustCalculator = dustCalculatorInstance
-            transactionSizeCalculator = transactionSizeCalculatorInstance
-            transactionSender = transactionSenderInstance
-
-            transactionSendTimer.delegate = transactionSender
-
-            transactionCreator = TransactionCreator(transactionBuilder: transactionBuilder, transactionProcessor: pendingTransactionProcessor, transactionSender: transactionSenderInstance, bloomFilterManager: bloomFilterManager)
+            inputSigner = InputSigner(hdWallet: hdWallet, network: network)
+        } else if publicWallet != nil {
+            inputSigner = InputSigner(network: network)
+        } else {
+            throw BuildError.noSeedData
         }
+
+        let transactionSizeCalculatorInstance = TransactionSizeCalculator()
+        let dustCalculatorInstance = DustCalculator(dustRelayTxFee: network.dustRelayTxFee, sizeCalculator: transactionSizeCalculatorInstance)
+        let recipientSetter = RecipientSetter(addressConverter: addressConverter, pluginManager: pluginManager)
+        let outputSetter = OutputSetter(outputSorterFactory: transactionDataSorterFactory, factory: factory)
+        let inputSetter = InputSetter(unspentOutputSelector: unspentOutputSelector, transactionSizeCalculator: transactionSizeCalculatorInstance, addressConverter: addressConverter, publicKeyManager: publicKeyManager, factory: factory, pluginManager: pluginManager, dustCalculator: dustCalculatorInstance, changeScriptType: purpose.scriptType, inputSorterFactory: transactionDataSorterFactory)
+        let lockTimeSetter = LockTimeSetter(storage: storage)
+        let transactionSigner = TransactionSigner(inputSigner: inputSigner)
+        let transactionBuilder = TransactionBuilder(recipientSetter: recipientSetter, inputSetter: inputSetter, lockTimeSetter: lockTimeSetter, outputSetter: outputSetter, signer: transactionSigner)
+        transactionFeeCalculator = TransactionFeeCalculator(recipientSetter: recipientSetter, inputSetter: inputSetter, addressConverter: addressConverter, publicKeyManager: publicKeyManager, changeScriptType: purpose.scriptType)
+        let transactionSendTimer = TransactionSendTimer(interval: 60)
+        let transactionSenderInstance = TransactionSender(transactionSyncer: transactionSyncer, initialBlockDownload: initialBlockDownload, peerManager: peerManager, storage: storage, timer: transactionSendTimer, logger: logger)
+
+        dustCalculator = dustCalculatorInstance
+        transactionSizeCalculator = transactionSizeCalculatorInstance
+        transactionSender = transactionSenderInstance
+
+        transactionSendTimer.delegate = transactionSender
+
+        transactionCreator = TransactionCreator(transactionBuilder: transactionBuilder, transactionProcessor: pendingTransactionProcessor, transactionSender: transactionSenderInstance, bloomFilterManager: bloomFilterManager)
+
         let mempoolTransactions = MempoolTransactions(transactionSyncer: transactionSyncer, transactionSender: transactionSender)
 
         let syncManager = SyncManager(reachabilityManager: reachabilityManager, initialSyncer: initialSyncer, peerGroup: peerGroup, apiSyncStateManager: stateManager, bestBlockHeight: blockSyncer.localDownloadedBestBlockHeight)
