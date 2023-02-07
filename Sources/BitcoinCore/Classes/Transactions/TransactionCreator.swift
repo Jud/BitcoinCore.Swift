@@ -33,6 +33,27 @@ class TransactionCreator {
 }
 
 extension TransactionCreator: ITransactionCreator {
+    func build(to address: String, memo: String?, value: Int, feeRate: Int, senderPay: Bool, sortType: TransactionDataSortType, rbfEnabled: Bool, unspentOutputs: [UnspentOutput]?, pluginData: [UInt8: IPluginData] = [:]) throws -> (MutableTransaction, [Data]) {
+        return try transactionBuilder.buildUnsignedMutableTransaction(
+                toAddress: address,
+                memo: memo,
+                value: value,
+                feeRate: feeRate,
+                senderPay: senderPay,
+                sortType: sortType,
+                rbfEnabled: rbfEnabled,
+                unspentOutputs: unspentOutputs,
+                pluginData: pluginData
+        )
+    }
+    
+    func finalize(tx: MutableTransaction, data: [Data]) throws -> FullTransaction {
+        let transaction = try transactionBuilder.finalizeTransaction(tx: tx, data: data)
+        
+        try processAndSend(transaction: transaction)
+        return transaction
+    }
+    
     func create(to address: String, memo: String?, value: Int, feeRate: Int, senderPay: Bool, sortType: TransactionDataSortType, rbfEnabled: Bool, unspentOutputs: [UnspentOutput]?, pluginData: [UInt8: IPluginData] = [:]) throws -> FullTransaction {
         let mutableTransaction = try transactionBuilder.buildTransaction(
             toAddress: address,

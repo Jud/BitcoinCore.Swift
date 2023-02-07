@@ -376,6 +376,8 @@ public protocol ITransactionSyncer: AnyObject {
 }
 
 public protocol ITransactionCreator {
+    func build(to address: String, memo: String?, value: Int, feeRate: Int, senderPay: Bool, sortType: TransactionDataSortType, rbfEnabled: Bool, unspentOutputs: [UnspentOutput]?, pluginData: [UInt8: IPluginData]) throws -> (MutableTransaction, [Data])
+    func finalize(tx: MutableTransaction, data: [Data]) throws -> FullTransaction
     func create(to address: String, memo: String?, value: Int, feeRate: Int, senderPay: Bool, sortType: TransactionDataSortType, rbfEnabled: Bool, unspentOutputs: [UnspentOutput]?, pluginData: [UInt8: IPluginData]) throws -> FullTransaction
     func create(from: UnspentOutput, to address: String, memo: String?, feeRate: Int, sortType: TransactionDataSortType, rbfEnabled: Bool) throws -> FullTransaction
     func create(from mutableTransaction: MutableTransaction) throws -> FullTransaction
@@ -383,6 +385,8 @@ public protocol ITransactionCreator {
 }
 
 protocol ITransactionBuilder {
+    func finalizeTransaction(tx: MutableTransaction, data: [Data]) throws -> FullTransaction
+    func buildUnsignedMutableTransaction(toAddress: String, memo: String?, value: Int, feeRate: Int, senderPay: Bool, sortType: TransactionDataSortType, rbfEnabled: Bool, unspentOutputs: [UnspentOutput]?, pluginData: [UInt8: IPluginData]) throws -> (MutableTransaction, [Data])
     func buildTransaction(toAddress: String, memo: String?, value: Int, feeRate: Int, senderPay: Bool, sortType: TransactionDataSortType, rbfEnabled: Bool, unspentOutputs: [UnspentOutput]?, pluginData: [UInt8: IPluginData]) throws -> MutableTransaction
     func buildTransaction(from: UnspentOutput, toAddress: String, memo: String?, feeRate: Int, sortType: TransactionDataSortType, rbfEnabled: Bool) throws -> MutableTransaction
 }

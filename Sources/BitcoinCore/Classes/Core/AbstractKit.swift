@@ -45,6 +45,14 @@ open class AbstractKit {
         try bitcoinCore.send(to: address, memo: memo, value: value, feeRate: feeRate, sortType: sortType, rbfEnabled: rbfEnabled, unspentOutputs: unspentOutputs, pluginData: pluginData)
     }
 
+    open func build(to address: String, memo: String?, value: Int, feeRate: Int, senderPay: Bool, sortType: TransactionDataSortType, rbfEnabled: Bool, unspentOutputs: [UnspentOutput]?, pluginData: [UInt8: IPluginData]) throws -> (MutableTransaction, [Data]) {
+        try bitcoinCore.build(to: address, memo: memo, value: value, feeRate: feeRate, senderPay: senderPay, sortType: sortType, rbfEnabled: rbfEnabled, unspentOutputs: unspentOutputs, pluginData: pluginData)
+    }
+    
+    public func finalize(tx: MutableTransaction, data: [Data]) throws -> FullTransaction {
+        try bitcoinCore.finalize(tx: tx, data: data)
+    }
+
     public func send(to hash: Data, memo: String?, scriptType: ScriptType, value: Int, feeRate: Int, sortType: TransactionDataSortType, rbfEnabled: Bool, unspentOutputs: [UnspentOutputInfo]?) throws -> FullTransaction {
         try bitcoinCore.send(to: hash, memo: memo, scriptType: scriptType, value: value, feeRate: feeRate, sortType: sortType, rbfEnabled: rbfEnabled, unspentOutputs: unspentOutputs)
     }

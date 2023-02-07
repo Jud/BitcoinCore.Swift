@@ -151,6 +151,32 @@ public extension BitcoinCore {
     func transaction(hash: String) -> TransactionInfo? {
         dataProvider.transaction(hash: hash)
     }
+    
+    func build(to address: String, memo: String?, value: Int, feeRate: Int, senderPay: Bool, sortType: TransactionDataSortType, rbfEnabled: Bool, unspentOutputs: [UnspentOutput]?, pluginData: [UInt8: IPluginData]) throws -> (MutableTransaction, [Data]) {
+        guard let transactionCreator = transactionCreator else {
+            throw CoreError.readOnlyCore
+        }
+
+        return try transactionCreator.build(
+            to: address,
+            memo: memo,
+            value: value,
+            feeRate: feeRate,
+            senderPay: senderPay,
+            sortType: sortType,
+            rbfEnabled: rbfEnabled,
+            unspentOutputs: unspentOutputs,
+            pluginData: pluginData
+        )
+    }
+    
+    func finalize(tx: MutableTransaction, data: [Data]) throws -> FullTransaction {
+        guard let transactionCreator = transactionCreator else {
+            throw CoreError.readOnlyCore
+        }
+
+        return try transactionCreator.finalize(tx: tx, data: data)
+    }
 
     var unspentOutputs: [UnspentOutput] {
         unspentOutputSelector.all

@@ -10,10 +10,16 @@ class SchnorrInputSigner {
         case noPrivateKey
     }
 
-    let hdWallet: IPrivateHDWallet
+    let hdWallet: IPrivateHDWallet?
+    let network: INetwork
 
     init(hdWallet: IPrivateHDWallet) {
         self.hdWallet = hdWallet
+    }
+
+    init(network: INetwork) {
+        self.hdWallet = nil
+        self.network = network
     }
 }
 
@@ -22,7 +28,7 @@ extension SchnorrInputSigner: IInputSigner {
         let input = inputsToSign[index]
         let pubKey = input.previousOutputPublicKey
 
-        guard let privateKeyData = try? hdWallet.privateKeyData(account: pubKey.account, index: pubKey.index, external: pubKey.external) else {
+        guard let privateKeyData = try? hdWallet!.privateKeyData(account: pubKey.account, index: pubKey.index, external: pubKey.external) else {
             throw SignError.noPrivateKey
         }
 

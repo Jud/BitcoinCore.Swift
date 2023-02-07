@@ -2,7 +2,7 @@ import Foundation
 
 public class MutableTransaction {
     var transaction = Transaction(version: 2, lockTime: 0)
-    var inputsToSign = [InputToSign]()
+    public var inputsToSign = [InputToSign]()
     var outputs = [Output]()
 
     public var recipientAddress: Address!
