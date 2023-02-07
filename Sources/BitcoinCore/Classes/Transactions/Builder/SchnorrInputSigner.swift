@@ -10,12 +10,17 @@ class SchnorrInputSigner {
         case noPrivateKey
     }
 
-    let hdWallet: IPrivateHDWallet
+    let hdWallet: IPrivateHDWallet?
+    let network: INetwork
 
     init(hdWallet: IPrivateHDWallet) {
         self.hdWallet = hdWallet
     }
 
+    init(network: INetwork) {
+        self.hdWallet = nil
+        self.network = network
+    }
 }
 
 extension SchnorrInputSigner: IInputSigner {
