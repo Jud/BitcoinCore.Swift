@@ -6,9 +6,9 @@ class TransactionSigner {
         case noRedeemScript
     }
 
-    private let inputSigner: IInputSigner
+    private let inputSigner: InputSigner
 
-    init(inputSigner: IInputSigner) {
+    init(inputSigner: InputSigner) {
         self.inputSigner = inputSigner
     }
 
@@ -22,6 +22,60 @@ class TransactionSigner {
 
 extension TransactionSigner: ITransactionSigner {
 
+    func dataToSign(mutableTransaction: MutableTransaction) throws -> [Data] {
+        var ret = [Data]()
+        for (index, _) in mutableTransaction.inputsToSign.enumerated() {
+            let sigHashData = try inputSigner.sigScriptSignatureHash(
+                    transaction: mutableTransaction.transaction,
+                    inputsToSign: mutableTransaction.inputsToSign,
+                    outputs: mutableTransaction.outputs,
+                    index: index
+            )
+            ret.append(sigHashData)
+        }
+
+        return ret
+    }
+
+    func signWithSignatureData(mutableTransaction: MutableTransaction, data: [Data]) throws {
+        for (index, inputToSign) in mutableTransaction.inputsToSign.enumerated() {
+            let previousOutput = inputToSign.previousOutput
+            let publicKey = inputToSign.previousOutputPublicKey
+            var sigScriptData = try inputSigner.sigScriptDataFromSignatureData(
+                    transaction: mutableTransaction.transaction,
+                    inputsToSign: mutableTransaction.inputsToSign,
+                    outputs: mutableTransaction.outputs,
+                    index: index,
+                    data: data
+            )
+            switch previousOutput.scriptType {
+            case .p2pkh:
+                inputToSign.input.signatureScript = signatureScript(from: sigScriptData)
+            case .p2wpkh:
+                mutableTransaction.transaction.segWit = true
+                inputToSign.input.witnessData = sigScriptData
+            case .p2wpkhSh:
+                mutableTransaction.transaction.segWit = true
+                inputToSign.input.witnessData = sigScriptData
+                inputToSign.input.signatureScript = OpCode.push(OpCode.scriptWPKH(publicKey.keyHash))
+            case .p2sh:
+                guard let redeemScript = previousOutput.redeemScript else {
+                    throw SignError.noRedeemScript
+                }
+                
+                if let signatureScriptFunction = previousOutput.signatureScriptFunction {
+                    // non-standard P2SH signature script
+                    inputToSign.input.signatureScript = signatureScriptFunction(sigScriptData)
+                } else {
+                    // standard (signature, publicKey, redeemScript) signature script
+                    sigScriptData.append(redeemScript)
+                    inputToSign.input.signatureScript = signatureScript(from: sigScriptData)
+                }
+            default: throw SignError.notSupportedScriptType
+            }
+        }
+    }
+    
     func sign(mutableTransaction: MutableTransaction) throws {
         for (index, inputToSign) in mutableTransaction.inputsToSign.enumerated() {
             let previousOutput = inputToSign.previousOutput
