@@ -160,14 +160,10 @@ public class BitcoinCoreBuilder {
                 throw BuildError.notSupported
             }
         case .public(let publicKey):
-            switch extendedKey.derivedType {
-            case .account:
-                let wallet = HDWatchAccountWallet(publicKey: publicKey)
-                publicWallet = wallet
-                publicKeyFetcher = WatchPublicKeyFetcher(hdWatchAccountWallet: wallet)
-                publicKeyManager = AccountPublicKeyManager.instance(storage: storage, hdWallet: wallet, gapLimit: 20, restoreKeyConverter: restoreKeyConverterChain)
-            default: throw BuildError.notSupported
-            }
+            let wallet = HDWatchAccountWallet(publicKey: publicKey)
+            publicWallet = wallet
+            publicKeyFetcher = WatchPublicKeyFetcher(hdWatchAccountWallet: wallet)
+            publicKeyManager = AccountPublicKeyManager.instance(storage: storage, hdWallet: wallet, gapLimit: 20, restoreKeyConverter: restoreKeyConverterChain)
         }
 
         let networkMessageParser = NetworkMessageParser(magic: network.magic)
