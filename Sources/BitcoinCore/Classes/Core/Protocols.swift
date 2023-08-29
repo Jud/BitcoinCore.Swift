@@ -412,6 +412,8 @@ public protocol IBlockchainDataListener: AnyObject {
 
 protocol IInputSigner {
     func sigScriptData(transaction: Transaction, inputsToSign: [InputToSign], outputs: [Output], index: Int) throws -> [Data]
+    func sigScriptSignatureHash(transaction: Transaction, inputsToSign: [InputToSign], outputs: [Output], index: Int) throws -> Data
+    func sigScriptDataFromSignatureData(transaction: Transaction, inputsToSign: [InputToSign], outputs: [Output], index: Int, data: [Data]) throws -> [Data]
 }
 
 public protocol ITransactionSizeCalculator {
