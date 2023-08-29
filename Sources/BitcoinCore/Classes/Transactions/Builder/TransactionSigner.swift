@@ -47,29 +47,29 @@ class TransactionSigner {
                     data: data
             )
             switch previousOutput.scriptType {
-            case .p2pkh:
-                inputToSign.input.signatureScript = signatureScript(from: sigScriptData)
-            case .p2wpkh:
-                mutableTransaction.transaction.segWit = true
-                inputToSign.input.witnessData = sigScriptData
-            case .p2wpkhSh:
-                mutableTransaction.transaction.segWit = true
-                inputToSign.input.witnessData = sigScriptData
-                inputToSign.input.signatureScript = OpCode.push(OpCode.scriptWPKH(publicKey.keyHash))
-            case .p2sh:
-                guard let redeemScript = previousOutput.redeemScript else {
-                    throw SignError.noRedeemScript
-                }
-
-                if let signatureScriptFunction = previousOutput.signatureScriptFunction {
-                    // non-standard P2SH signature script
-                    inputToSign.input.signatureScript = signatureScriptFunction(sigScriptData)
-                } else {
-                    // standard (signature, publicKey, redeemScript) signature script
-                    sigScriptData.append(redeemScript)
+                case .p2pkh:
                     inputToSign.input.signatureScript = signatureScript(from: sigScriptData)
-                }
-            default: throw SignError.notSupportedScriptType
+                case .p2wpkh:
+                    mutableTransaction.transaction.segWit = true
+                    inputToSign.input.witnessData = sigScriptData
+                case .p2wpkhSh:
+                    mutableTransaction.transaction.segWit = true
+                    inputToSign.input.witnessData = sigScriptData
+                    inputToSign.input.signatureScript = OpCode.push(OpCode.segWitOutputScript(publicKey.hashP2pkh, versionByte: 0))
+                case .p2sh:
+                    guard let redeemScript = previousOutput.redeemScript else {
+                        throw SignError.noRedeemScript
+                    }
+
+                    if let signatureScriptFunction = previousOutput.signatureScriptFunction {
+                        // non-standard P2SH signature script
+                        inputToSign.input.signatureScript = signatureScriptFunction(sigScriptData)
+                    } else {
+                        // standard (signature, publicKey, redeemScript) signature script
+                        sigScriptData.append(redeemScript)
+                        inputToSign.input.signatureScript = signatureScript(from: sigScriptData)
+                    }
+                default: throw SignError.notSupportedScriptType
             }
         }
     }

@@ -11,10 +11,11 @@ class SchnorrInputSigner {
     }
 
     let hdWallet: IPrivateHDWallet?
-    let network: INetwork
+    let network: INetwork?
 
     init(hdWallet: IPrivateHDWallet) {
         self.hdWallet = hdWallet
+        self.network = nil
     }
 
     init(network: INetwork) {
@@ -29,7 +30,7 @@ extension SchnorrInputSigner: IInputSigner {
         let input = inputsToSign[index]
         let pubKey = input.previousOutputPublicKey
 
-        guard let privateKeyData = try? hdWallet.privateKeyData(account: pubKey.account, index: pubKey.index, external: pubKey.external) else {
+        guard let privateKeyData = try? hdWallet!.privateKeyData(account: pubKey.account, index: pubKey.index, external: pubKey.external) else {
             throw SignError.noPrivateKey
         }
 
@@ -41,4 +42,11 @@ extension SchnorrInputSigner: IInputSigner {
         return [signature]
     }
 
+    func sigScriptSignatureHash(transaction: Transaction, inputsToSign: [InputToSign], outputs: [Output], index: Int) throws -> Data {
+        return Data()
+    }
+    
+    func sigScriptDataFromSignatureData(transaction: Transaction, inputsToSign: [InputToSign], outputs: [Output], index: Int, data: [Data]) throws -> [Data] {
+        return [Data]()
+    }
 }
