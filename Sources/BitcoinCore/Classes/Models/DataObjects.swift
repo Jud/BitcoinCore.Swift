@@ -54,7 +54,7 @@ open class FullTransaction {
 public struct InputToSign {
     let input: Input
     let previousOutput: Output
-    let previousOutputPublicKey: PublicKey
+    public let previousOutputPublicKey: PublicKey
 }
 
 public struct OutputWithPublicKey {
