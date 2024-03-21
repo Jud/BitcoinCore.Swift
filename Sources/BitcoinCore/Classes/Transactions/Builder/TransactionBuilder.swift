@@ -4,12 +4,22 @@ class TransactionBuilder {
     private let inputSetter: IInputSetter
     private let lockTimeSetter: ILockTimeSetter
     private let outputSetter: IOutputSetter
+    private let signer: TransactionSigner?
 
     init(recipientSetter: IRecipientSetter, inputSetter: IInputSetter, lockTimeSetter: ILockTimeSetter, outputSetter: IOutputSetter) {
         self.recipientSetter = recipientSetter
         self.inputSetter = inputSetter
         self.lockTimeSetter = lockTimeSetter
         self.outputSetter = outputSetter
+        self.signer = nil
+    }
+
+    init(recipientSetter: IRecipientSetter, inputSetter: IInputSetter, lockTimeSetter: ILockTimeSetter, outputSetter: IOutputSetter, signer: TransactionSigner) {
+        self.recipientSetter = recipientSetter
+        self.inputSetter = inputSetter
+        self.lockTimeSetter = lockTimeSetter
+        self.outputSetter = outputSetter
+        self.signer = signer
     }
 }
 
@@ -35,11 +45,11 @@ extension TransactionBuilder: ITransactionBuilder {
 
         outputSetter.setOutputs(to: mutableTransaction, sortType: sortType)
 
-        return (mutableTransaction, try signer.dataToSign(mutableTransaction: mutableTransaction))
+        return (mutableTransaction, try signer!.dataToSign(mutableTransaction: mutableTransaction))
     }
     
     func finalizeTransaction(tx: MutableTransaction, data: [Data]) throws -> FullTransaction {
-        try signer.signWithSignatureData(mutableTransaction: tx, data: data)
+        try signer!.signWithSignatureData(mutableTransaction: tx, data: data)
         return tx.build()
     }
 
